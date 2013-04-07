@@ -1,0 +1,11 @@
+{
+  "console": {
+    "http": {"port": 7080, "host": "0.0.0.0"},
+    "ws":   {"port": 9081, "host": "0.0.0.0"}
+  },
+  "vote": {
+    "http": {"port": 80, "host": "0.0.0.0"},
+    "html": "vote/index.html",
+    "max": 25
+  }
+}
