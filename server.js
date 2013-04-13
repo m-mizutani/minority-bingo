@@ -1,6 +1,7 @@
 var http = require ('http');
 var fs = require ('fs');
 var spawn = require('child_process').spawn;
+var zmq = require ('zmq');
 
 var conf = JSON.parse (fs.readFileSync ('./conf.json'));
 var players = JSON.parse (fs.readFileSync ('./player.json'));
@@ -12,6 +13,24 @@ players.forEach (function (p) {
 
 var vote_table = {};
 var vote_history = {};
+
+function vote_reset () {
+  console.log ('reset');
+  vote_table = {};
+  vote_history = {};
+}
+
+vote_reset ();
+
+fs.readFile (conf.console.history, function (err, data) {
+  if (err === null) {
+    vote_history = JSON.parse (data);
+  }
+  else {
+    console.log ('no history is loaded. (' + conf.console.history + ')');
+  }
+});
+
 
 // -----------------------------------------------------------------
 // vote server
@@ -60,6 +79,10 @@ function number_multi2uni (num) {
 
 function build_vote_content (res_msg, token) {
   var player = player_table [token];
+  if (player === undefined) {
+    console.log ('invalid token: ' + token);
+    return '<html><body>アクセスしなおして下さい</body></html>';
+  }
   data = vote_html_data.replace ('__RES__', res_msg).
     replace (/__TOKEN__/g, token).
     replace ('__NAME__', player.name);
@@ -77,7 +100,7 @@ function build_vote_content (res_msg, token) {
     }
 
     if (vote_history[n] === true) {
-      tbl += '<td style="background: #871;">' + n + '</td>';
+      tbl += '<td style="background: #AE0017;">' + n + '</td>';
     }
     else {
       tbl += '<td>' + n + '</td>';
@@ -124,7 +147,7 @@ http.createServer(function (req, res) {
         if (map.number === undefined || 
             map.token === undefined || 
             player_table[map.token] === undefined) {
-          console.log ('-- dump ---');
+          console.log ('パラメータエラー');
           console.log (data.toString ());
           throw '不明なエラー';
         }
@@ -287,17 +310,112 @@ function set_vote_history (data, sock) {
   }
   vote_history [data] = true;
   sock.send (JSON.stringify ({cmd: 'show', data: vote_table})); 
+
+  fs.writeFile (conf.console.history, JSON.stringify (vote_history),
+                function (err) {
+                  if (err) {
+                    console.log ('writeFile: ' + err);
+                  }
+                });
+}
+
+function validate_bingo () {
+  var stat = {reach: {}, bingo: {}};
+
+  players.forEach (function (p) {
+    // 横チェック
+    var rec = [];
+
+    for (var i = 0; i < 5; i++) {
+      var cnt = 0;
+      for (var n = 0; n < 5; n++) {
+        if (vote_history [p.cell[(i * 5) + n]] === true) {
+          cnt++;
+        }
+      }
+      rec.push (cnt);
+    }
+
+    // 縦チェック
+    for (var i = 0; i < 5; i++) {
+      var cnt = 0;
+      for (var n = 0; n < 5; n++) {
+        if (vote_history [p.cell[i + (n * 5)]] === true) {
+          cnt++;
+        }
+      }
+      rec.push (cnt);
+    }
+
+    // 斜めチェック
+    var cnt = 0;
+    for (var i = 0; i < 5; i++) {
+      if (vote_history [p.cell[(i * 6)]] === true) {
+          cnt++;
+      }
+    }
+    rec.push (cnt);
+
+    var cnt = 0;
+    for (var i = 0; i < 5; i++) {
+      if (vote_history [p.cell[((i + 1) * 4)]] === true) {
+          cnt++;
+      }
+    }
+    rec.push (cnt);
+
+    rec.forEach (function (c) {
+      if (c === 4) {
+        stat.reach[p.token] = p;
+      }
+      if (c === 5) {
+        stat.bingo[p.token] = p;
+        // console.log ('BINGO! ' + p.token);
+      }
+    });
+  });
+
+  return stat;
 }
 
 wss.on ('connection', function(sock) {
   sock.on ('message', function(msg) {
     obj = JSON.parse (msg);
     switch (obj.cmd) {
-    case 'show': sock.send (JSON.stringify ({cmd: 'show', data: vote_table})); break;
-    case 'res': sock.send (JSON.stringify ({cmd: 'res', data: vote_result ()})); break;
-    case 'fix': set_vote_history (obj.data, sock); break;
-    case 'start': vote_start (); break;
+    case 'show': 
+      sock.send (JSON.stringify ({cmd: 'show', data: vote_table})); 
+      break;
+
+    case 'list': 
+      sock.send (JSON.stringify ({cmd: 'list', 
+                                  data: {players: players, 
+                                         history: vote_history}})); 
+      break;
+
+    case 'hist':
+      sock.send (JSON.stringify ({cmd: 'hist', data: vote_history})); 
+      break;
+
+    case 'res': 
+      sock.send (JSON.stringify ({cmd: 'res', data: vote_result ()})); 
+      break;
+
+    case 'fix': 
+      set_vote_history (obj.data, sock); 
+      sock.send (JSON.stringify ({cmd: 'result', data: validate_bingo ()}));
+      break;
+
+    case 'result':
+      sock.send (JSON.stringify ({cmd: 'result', data: validate_bingo ()}));
+      break;
+
+    case 'start': 
+      vote_start (); 
+      sock.send (JSON.stringify ({cmd: 'start', data: {count: game_conf.time, fade: 3 }}));
+      break;
+
     case 'stop':  vote_stop (); break;
+    case 'reset':  vote_reset (); break;
     default:
       console.log (obj);
     }
@@ -309,3 +427,17 @@ wss.on('close', function (sock) {
 });
 
 var vote_open = true; // for debug
+
+var game_conf = {time: 5};
+
+var zmq_rep = zmq.socket ('rep');
+zmq_rep.bindSync ('tcp://*:7000');
+zmq_rep.on ('message', function (data) {
+  var msg = JSON.parse (data.toString ());
+  console.log (msg);
+  if (msg.time !== undefined) {
+    game_conf.time = msg.time;
+ }
+
+  zmq_rep.send (JSON.stringify (game_conf));
+});

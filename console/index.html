@@ -1,20 +1,43 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
   <head>
+    <meta http-equiv="Content-Language" content="ja">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta name="Content-Type" content="text/html; charset=UTF-8" />
     <title>Minority Bingo</title>
     <script type="text/javascript" src="jquery-1.9.1.min.js"></script>
     <script type="text/javascript" src="main.js"></script>
+    <link rel="stylesheet" href="reset.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="style.css" type="text/css" media="screen" />
   </head>
   <body>
-    <h1>少数決ビンゴ</h1>
+    <div class="head">
+      <h1><span class="white">少</span>数決ビンゴ</h1>
+      <hr class="head">
+    </div>
     <div id="main">
-      <input type="button" value="Start" id="start_btn">
-      <input type="button" value="結果を見る" id="result_btn">
-      <div id="count"></div>
-      <div id="elected"></div>
-      <div id="stat"></div>
-      <div id="history"></div>
+      <div class="control">
+	<a href="#" class="btn" id="start_btn">スタート</a>
+	<a href="#" class="btn" id="reset_btn">最初からやり直す</a>
+      </div>
+      <div id="view">
+	<div class="stat">
+	  <span id="count"></span>
+	  <span id="elected"></span>
+	</div>
+	<div>
+	  <div id="stat"></div>
+	  <div id="">
+	    <div class="result">
+	      <h2>ビンゴ！</h2>
+	      <div id="bingo" class=""></div>
+	    </div>
+	    <div class="result">
+	      <h2>リーチ！</h2>
+	      <div id="reach" class=""></div>
+	    </div>
+	  </div>
+	</div>
+      </div>
     </div>
   </body>
 </html>

@@ -1,7 +1,112 @@
+body {
+    margin: 12px;
+    font-family: "Hiragino Maru Gothic Pro", sans-serif;
+    background: #080808;
+    background: -webkit-gradient(linear, top, bottom, from(#0c0c0c), to(#000000));
+    color: white;
+}
+
+div.head {
+    width: 95%;
+    margin-top: 24px;
+    margin-bottom: 24px;
+    /* border-bottom: solid 1px #440000; */
+}
+
+hr.head {
+   border: 0;
+    height: 1px;
+    background: #333;
+    background-image: -webkit-linear-gradient(left, #333, #ccc, #333);
+    background-image:    -moz-linear-gradient(left, #333, #ccc, #333);
+    background-image:     -ms-linear-gradient(left, #333, #ccc, #333);
+    background-image:      -o-linear-gradient(left, #333, #ccc, #333);
+}    
+    
 h1 {
+    color: #AE0017;
+    font-family: "HGSMinchoE", serif;
+    font-size: 32pt;
+    text-align: center;
+}
+
+div.control {
+    margin: 5px;
+    margin-left: 20px;
+    padding: 10px;
+}
+
+div#count {
+    width: 50px;
+    padding: 10px;
+    margin: 5px;
     font-size: 16pt;
 }
 
-td.elected {
-    background: #93a;
+a.btn {
+    font-size: 14pt;
+    color: #ddd;
+    padding: 10px;
+    margin: 5px;
+    border: solid 1px #ddd;
+    text-decoration: none;
+    border-radius: 5px;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+}
+a.btn:hover {
+    color: #fff;
+    border-color: #fff;
+}
+a.btn:active {
+    color: #AE0017;
+}
+
+div.stat {
+    margin: 10px;
+    padding: 10px;
+    font-size: 20pt;;
+}
+
+tbody.score tr td {
+    font-size: 14pt;
+    text-align: right;
+    padding: 3px 8px 3px 8px;
+}
+tbody.score tr td.count {
+    width: 60px;
+}
+tbody.score tr td.meter {
+    width: 12px;
+}
+tbody.score tr td.voted {
+    background: #F0BC1C;
+    border: 1px solid black;
+}
+
+span.white {
+    color: #eee;
+}
+
+tr.elected {
+    color: #555;
+}
+
+tr.highlight {
+    color: #AE0017;
+    font-weight: bold;
+}
+
+div#stat {
+    float: left;
+}
+
+div.result {
+    line-height: 1.2em;
+    margin: 20px;
+}
+div.result h2 {
+    margin: 10px;
+    font-size: 16pt;
+
 }
